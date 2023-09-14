@@ -1,0 +1,18 @@
+DecisionTreeRegressor(max_depth=5),['RV30'],['RV60'],['MacroUncertaintyH1'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+LinearRegression(),['RV30'],['VIXCLS'],['MichiganConsumer'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+"RandomForestRegressor(max_depth=2, random_state=1)",['RV30'],['FinancialUncertaintyH1'],['VIXCLS'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+GradientBoostingRegressor(),['RV30'],['RV60'],['MacroUncertaintyH3'],['VIXCLS'],['FinancialUncertaintyH12']
+"XGBRegressor(base_score=None, booster=None, callbacks=None,
+             colsample_bylevel=None, colsample_bynode=None,
+             colsample_bytree=None, early_stopping_rounds=None,
+             enable_categorical=False, eval_metric=None, gamma=None,
+             gpu_id=None, grow_policy=None, importance_type=None,
+             interaction_constraints=None, learning_rate=None, max_bin=None,
+             max_cat_to_onehot=None, max_delta_step=None, max_depth=None,
+             max_leaves=None, min_child_weight=None, missing=nan,
+             monotone_constraints=None, n_estimators=100, n_jobs=None,
+             num_parallel_tree=None, predictor=None, random_state=None,
+             reg_alpha=None, reg_lambda=None, ...)",['RV30'],['RV90'],['MacroUncertaintyH1'],['RealUncertaintyH1'],['InfectEMVIndex']
+LGBMRegressor(),['InfectEMVIndex'],['VIXCLS'],['MichiganConsumer'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+Ridge(),['RV30'],['MacroUncertaintyH3'],['RealUncertaintyH1'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+Lasso(alpha=0.0005),['RV30'],['RV60'],['MichiganConsumer'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']

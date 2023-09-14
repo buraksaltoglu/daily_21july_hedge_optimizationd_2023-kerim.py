@@ -1,0 +1,18 @@
+DecisionTreeRegressor(max_depth=5),['RV30'],['AWHMAN'],['AMDMUO'],['REALLN'],['TB6MS']
+LinearRegression(),['RV30'],['PPICMM'],['CPIAPPSL'],['INVEST'],['CUSR0000SAS']
+"RandomForestRegressor(max_depth=2, random_state=1)",['RV30'],['RealUncertaintyH3'],['FinancialUncertaintyH3'],['USGOOD'],['AWOTMAN']
+GradientBoostingRegressor(),['RV30'],['AWOTMAN'],['BUSINV'],['NONBORRES'],['CUSR0000SAS']
+"XGBRegressor(base_score=None, booster=None, callbacks=None,
+             colsample_bylevel=None, colsample_bynode=None,
+             colsample_bytree=None, early_stopping_rounds=None,
+             enable_categorical=False, eval_metric=None, gamma=None,
+             gpu_id=None, grow_policy=None, importance_type=None,
+             interaction_constraints=None, learning_rate=None, max_bin=None,
+             max_cat_to_onehot=None, max_delta_step=None, max_depth=None,
+             max_leaves=None, min_child_weight=None, missing=nan,
+             monotone_constraints=None, n_estimators=100, n_jobs=None,
+             num_parallel_tree=None, predictor=None, random_state=None,
+             reg_alpha=None, reg_lambda=None, ...)",['RV30'],['MacroUncertaintyH1'],['VIXCLS'],['RealUncertaintyH12'],['DSERRG3M086SBEA']
+LGBMRegressor(),['INVEST'],['CUSR0000SAS'],['DSERRG3M086SBEA'],['CES0600000008'],['CES2000000008']
+Ridge(),['RV30'],['RealUncertaintyH3'],['FinancialUncertaintyH12'],['MacroUncertaintyH12'],['RealUncertaintyH12']
+Lasso(alpha=0.0005),['RV30'],['RV60'],['DSERRG3M086SBEA'],['CES0600000008'],['CES2000000008']

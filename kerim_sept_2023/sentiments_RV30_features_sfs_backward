@@ -1,0 +1,8 @@
+['RV30'],['FinancialUncertaintyH1'],['MacroUncertaintyH1'],['VIXCLS'],['FinancialUncertaintyH12']
+['RV30'],['VIXCLS'],['MichiganConsumer'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+['RV30'],['FinancialUncertaintyH1'],['VIXCLS'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+['RV30'],['RV60'],['FinancialUncertaintyH1'],['VIXCLS'],['FinancialUncertaintyH3']
+['RV30'],['RV90'],['MacroUncertaintyH1'],['RealUncertaintyH1'],['InfectEMVIndex']
+['InfectEMVIndex'],['VIXCLS'],['MichiganConsumer'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+['RV30'],['MacroUncertaintyH3'],['RealUncertaintyH1'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']
+['RV30'],['RV60'],['MichiganConsumer'],['FinancialUncertaintyH3'],['FinancialUncertaintyH12']

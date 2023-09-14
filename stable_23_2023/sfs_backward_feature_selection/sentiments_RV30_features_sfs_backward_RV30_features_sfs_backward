@@ -1,0 +1,18 @@
+DecisionTreeRegressor(max_depth=5),['RV60'],['AAAFFM'],['IPBUSEQ'],['BUSLOANS'],['EXCAUS']
+LinearRegression(),['RV60'],['CUSR0000SAD'],['CUSR0000SAS'],['CES0600000008'],['CES2000000008']
+"RandomForestRegressor(max_depth=2, random_state=1)",['RV60'],['UEMP15T26'],['W875RX1'],['IPNCONGD'],['CPIMEDSL']
+GradientBoostingRegressor(),['RV30'],['RV60'],['BOGMBASE'],['EXSZUS'],['EXJPUS']
+"XGBRegressor(base_score=None, booster=None, callbacks=None,
+             colsample_bylevel=None, colsample_bynode=None,
+             colsample_bytree=None, early_stopping_rounds=None,
+             enable_categorical=False, eval_metric=None, gamma=None,
+             gpu_id=None, grow_policy=None, importance_type=None,
+             interaction_constraints=None, learning_rate=None, max_bin=None,
+             max_cat_to_onehot=None, max_delta_step=None, max_depth=None,
+             max_leaves=None, min_child_weight=None, missing=nan,
+             monotone_constraints=None, n_estimators=100, n_jobs=None,
+             num_parallel_tree=None, predictor=None, random_state=None,
+             reg_alpha=None, reg_lambda=None, ...)",['RV60'],['CLF16OV'],['USWTRADE'],['REALLN'],['DTCOLNVHFNM']
+LGBMRegressor(),['INVEST'],['CUSR0000SAS'],['DSERRG3M086SBEA'],['CES0600000008'],['CES2000000008']
+Ridge(),['RV60'],['UEMP15T26'],['T10YFFM'],['IPNCONGD'],['IPBUSEQ']
+Lasso(alpha=0.0005),['RV60'],['CUSR0000SAS'],['DSERRG3M086SBEA'],['CES0600000008'],['CES2000000008']
