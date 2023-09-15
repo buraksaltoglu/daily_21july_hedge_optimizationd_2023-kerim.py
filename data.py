@@ -67,6 +67,9 @@ for key_name in file_dictionary.keys():
 monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
 monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
 
+data_macro = file_dictionary['monthly_dataset_macro_sentiment_92_filtered']
+monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
+sentiments=monthly_dataset_sentiment_92_filtered
 ##############################################################################################################
 
 # create the data index ###################################################
@@ -84,6 +87,10 @@ monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
 # data_mixed.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
 # data_finance_rp.drop(['1.03.2020','1.05.2020','1.04.2020','1.06.2020'],inplace=True)
 #######################################################################################
+column_names = data_macro.columns
+
+# Now, 'column_names' contains the names of all columns in the DataFrame 'df'
+print(column_names)
 
 X_values = sentiments.shift(1).dropna()
 
