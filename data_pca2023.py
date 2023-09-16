@@ -68,8 +68,7 @@ for key_name in file_dictionary.keys():
 # Example
 monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
 monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
-print(monthly_dataset_sentiment_92_filtered)
-print(len(monthly_dataset_sentiment_92_filtered))
+
 ##############################################################################################################
 
 # create the data index ###################################################
