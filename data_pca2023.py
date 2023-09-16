@@ -164,6 +164,13 @@ for name, regresor in regresors.items():
     rmse_scores.append((name, rmse))
     print(y_test.values)
     print(y_pred)
+
+    y_test_df = pd.DataFrame(y_test).reset_index()
+    y_pred_df = pd.DataFrame({'Pred': y_pred})
+    y_pred_df['date'] = y_test_df['date']
+
+    y_all = y_test_df.merge(y_pred_df, on='date')
+    
     plt.figure (figsize=(10, 4))
     plt.plot (y_test.values, label='Actual', color='blue', marker='o')
     plt.plot (y_pred, label='Predicted', linestyle='dotted', color='red', marker='o')
