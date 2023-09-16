@@ -20,7 +20,8 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from xgboost.sklearn import XGBRegressor
-
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 sns.set_style('white')
 
 warnings.filterwarnings('ignore')
