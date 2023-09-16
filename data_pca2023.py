@@ -118,14 +118,14 @@ mse = []
 #print(np.shape(X_reduced))
 # what is the % of explained variance by 1 2 3 ..factors
 print('variance explained by factors')
-PCA_dim=40
+PCA_dim=5
 print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals = 4)*100)[0:PCA_dim])
 
 
 
 # here we choose the 1st part i.e. 90% for training and 10% for testing,if we want random sample write random
 
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.02,shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.050,shuffle=False)
 
 #scale the training and testing data
 
@@ -160,12 +160,12 @@ for name, regresor in regresors.items():
     model = regresor
     model.fit(X_reduced_train, y_train)
     y_pred = model.predict(X_reduced_test)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    rmse = np.sqrt(mean_squared_error(y_test.values, y_pred))
     rmse_scores.append((name, rmse))
-    print(y_test)
+    print(y_test.values)
     print(y_pred)
     plt.figure (figsize=(10, 4))
-    plt.plot (y_test, label='Actual', color='blue', marker='o')
+    plt.plot (y_test.values, label='Actual', color='blue', marker='o')
     plt.plot (y_pred, label='Predicted', linestyle='dotted', color='red', marker='o')
     plt.xlabel ('Time')
     plt.ylabel ('Value')
