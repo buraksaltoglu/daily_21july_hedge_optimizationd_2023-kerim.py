@@ -89,11 +89,15 @@ monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
 
 X_values = monthly_dataset_sentiment_92_filtered.shift(1).dropna()
 
-Y_values = monthly_dataset_sentiment_92_filtered['RV30']
+Y_values = monthly_dataset_sentiment_92_filtered['RV90']
 Y_values = Y_values.drop(Y_values.index[0])
 
+#X_values=monthly_dataset_macro_sentiment_92_filtered.shift(1).dropna()
 
+#Y_values = monthly_dataset_macro_sentiment_92_filtered['RV30']
+#Y_values = Y_values.drop(Y_values.index[0])
 # X_n=X.drop(['RV30'],axis=1)
+
 
 # data_finance.drop(['logret, CO1'],axis=1,inplace=True)
 # data_finance_rp=data_finance.drop(['logret','CO1','CO3','CO6','brent'], axis=1,inplace=True)
@@ -118,14 +122,29 @@ mse = []
 #print(np.shape(X_reduced))
 # what is the % of explained variance by 1 2 3 ..factors
 print('variance explained by factors')
-PCA_dim=5
+PCA_dim=8
 print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals = 4)*100)[0:PCA_dim])
 
+cumulative_variance_ratio = np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4) * 100)
+index_90_percent = np.argmax(cumulative_variance_ratio >= 90)
 
+# Specify the number of principal components (factors) you want to plot
+PCA_dim = len(cumulative_variance_ratio)
+
+# Create a plot
+plt.figure(figsize=(8, 6))
+plt.plot(range(1, PCA_dim + 1), cumulative_variance_ratio[:PCA_dim], marker='o', linestyle='-')
+plt.plot(index_90_percent + 1, 90, 'ro')  # Red dot at 90% explained variance
+plt.title('Cumulative Explained Variance vs. Number of Principal Components')
+plt.xlabel('Number of Principal Components')
+plt.ylabel('Cumulative Explained Variance (%)')
+plt.xticks(range(1, PCA_dim + 1), range(1, PCA_dim + 1))  # Show only integer values on the x-axis
+plt.grid(True)
+plt.show()
 
 # here we choose the 1st part i.e. 90% for training and 10% for testing,if we want random sample write random
 
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.050,shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.08,shuffle=False)
 
 #scale the training and testing data
 
@@ -162,8 +181,11 @@ for name, regresor in regresors.items():
     y_pred = model.predict(X_reduced_test)
     rmse = np.sqrt(mean_squared_error(y_test.values, y_pred))
     rmse_scores.append((name, rmse))
-    print(y_test.values)
-    print(y_pred)
+
+
+
+
+
 
     y_test_df = pd.DataFrame(y_test).reset_index()
     y_pred_df = pd.DataFrame({'Pred': y_pred})
@@ -172,8 +194,9 @@ for name, regresor in regresors.items():
     y_all = y_test_df.merge(y_pred_df, on='date')
     
     plt.figure (figsize=(10, 4))
-    plt.plot (y_test.values, label='Actual', color='blue', marker='o')
-    plt.plot (y_pred, label='Predicted', linestyle='dotted', color='red', marker='o')
+    plt.plot (y_test.values, label='Actual', color='red')
+    plt.plot (y_pred, label='pred', color='blue')
+
     plt.xlabel ('Time')
     plt.ylabel ('Value')
     plt.title (f'Time Series Plot for Model: {name}')
