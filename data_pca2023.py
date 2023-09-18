@@ -130,7 +130,7 @@ index_90_percent = np.argmax(cumulative_variance_ratio >= 90)
 
 # Specify the number of principal components (factors) you want to plot
 PCA_dim = len(cumulative_variance_ratio)
-
+explained_variance_90_percent = index_90_percent + 1  # +1 because indexing starts from 0
 # Create a plot
 plt.figure(figsize=(8, 6))
 plt.plot(range(1, PCA_dim + 1), cumulative_variance_ratio[:PCA_dim], marker='o', linestyle='-')
@@ -142,6 +142,7 @@ plt.xticks(range(1, PCA_dim + 1), range(1, PCA_dim + 1))  # Show only integer va
 plt.grid(True)
 plt.show()
 
+print(f"Dimension where 90% variance is explained: {explained_variance_90_percent}")
 # here we choose the 1st part i.e. 90% for training and 10% for testing,if we want random sample write random
 
 X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.08,shuffle=False)
@@ -233,4 +234,63 @@ excel_file_path = 'rmse_scores.xlsx'
 df.to_excel(excel_file_path, index=False)
 
 print(f'RMSE scores saved to {excel_file_path}')
+
+from sklearn.ensemble import StackingRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+
+# Define a function to get the base models
+def get_base_models():
+    base_models = dict()
+    base_models['cart'] = DecisionTreeRegressor(max_depth=5)
+    base_models['ols'] = LinearRegression()
+    base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
+    base_models['gboost'] = GradientBoostingRegressor()
+    base_models['XGBoost'] = XGBRegressor()
+    base_models['LGBoost'] = LGBMRegressor()
+    base_models['ridge'] = Ridge(alpha=1.0)
+    base_models['Lasso'] = Lasso(alpha=0.0005)
+    return base_models
+
+# Get the base models
+base_models = get_base_models()
+
+# Split your data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_values, Y_values, test_size=0.1, shuffle=False)
+
+# Create a list of base models and their names
+base_model_list = list(base_models.values())
+base_model_names = list(base_models.keys())
+
+# Create the stacking ensemble model
+stacking_regressor = StackingRegressor(
+    estimators=[('base_' + name, model) for name, model in zip(base_model_names, base_model_list)],
+    final_estimator=LinearRegression()  # You can choose a different meta-model if needed
+)
+
+# Fit the stacking ensemble model
+stacking_regressor.fit(X_train, y_train)
+
+# Predict with the stacking model
+y_pred_stacking = stacking_regressor.predict(X_test)
+
+# Calculate RMSE for stacking model
+rmse_stacking = np.sqrt(mean_squared_error(y_test, y_pred_stacking))
+
+# Print the RMSE for the stacking model
+print(f"Stacking RMSE: {rmse_stacking}")
+In this modified code:
+
+We define a get_base_models function to obtain the base models, which is similar to your original code.
+We split your data into training and testing sets using train_test_split.
+We create a list of base models (base_model_list) and their names (base_model_names).
+We create the stacking ensemble model using StackingRegressor, specifying the base models as estimators and the meta-model (in this case, a Linear Regression model) as final_estimator.
+We fit the stacking ensemble model on the training data and make predictions on the testing data.
+We calculate and print the RMSE for the stacking model.
+This code uses the base models you defined in your original code as the base models for stacking.
+
+
+
+
 
