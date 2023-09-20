@@ -20,9 +20,14 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from xgboost.sklearn import XGBRegressor
+from sklearn.svm import SVR
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import StackingRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.model_selection import TimeSeriesSplit
 sns.set_style('white')
 
 warnings.filterwarnings('ignore')
@@ -67,7 +72,16 @@ for key_name in file_dictionary.keys():
 
 # Example
 monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
+
 monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
+
+monthly_dataset_macro_92_filtered = file_dictionary['monthly_dataset_macro_sentiment_92_filtered']
+
+monthly_dataset_macro_92_filtered.set_index('date', inplace=True)
+
+monthly_dataset_macro_92_filtered = file_dictionary['monthly_full_dataset_sd92_filtered']
+
+monthly_full_dataset_sd92_filtered.set_index('date', inplace=True)
 
 ##############################################################################################################
 
@@ -86,11 +100,16 @@ monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
 # data_mixed.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
 # data_finance_rp.drop(['1.03.2020','1.05.2020','1.04.2020','1.06.2020'],inplace=True)
 #######################################################################################
+monthly_dataset_macro_92_filtered.drop(['2020-03-01','2020-04-01','2020-06-01','2020-05-01'], inplace=True)
+#X_values = monthly_dataset_sentiment_92_filtered.shift(1).dropna()
+#Y_values = monthly_dataset_sentiment_92_filtered['RV90']
 
-X_values = monthly_dataset_sentiment_92_filtered.shift(1).dropna()
-
-Y_values = monthly_dataset_sentiment_92_filtered['RV90']
+X_values = monthly_dataset_macro_92_filtered.shift(1).dropna()
+Y_values = monthly_dataset_macro_92_filtered['RV90']
 Y_values = Y_values.drop(Y_values.index[0])
+
+print(X_values)
+
 
 #X_values=monthly_dataset_macro_sentiment_92_filtered.shift(1).dropna()
 
@@ -122,7 +141,7 @@ mse = []
 #print(np.shape(X_reduced))
 # what is the % of explained variance by 1 2 3 ..factors
 print('variance explained by factors')
-PCA_dim=8
+PCA_dim=70
 print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals = 4)*100)[0:PCA_dim])
 
 cumulative_variance_ratio = np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4) * 100)
@@ -150,7 +169,7 @@ X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_val
 #scale the training and testing data
 
 
-print(y_test)
+
 
 def get_regresors():
     regresors = dict ( )
@@ -162,6 +181,10 @@ def get_regresors():
     regresors[ 'LGBoost' ] = LGBMRegressor ( )
     regresors[ 'ridge' ] = Ridge(alpha=1.0)
     regresors['Lasso'] = Lasso(alpha=0.0005)
+    regresors['ann'] = MLPRegressor(hidden_layer_sizes=(250,), max_iter=1000)
+    regresors[ 'svr' ] = SVR (kernel='linear')  # You can change the kernel type as needed
+    regresors[ 'adaboost' ] = AdaBoostRegressor ( )
+
     return regresors
 
 
@@ -224,7 +247,7 @@ for bar, rmse_val in zip(bars, rmse_values):
 
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.show()
+#plt.show()
 
 print(rmse_scores)
 df = pd.DataFrame(rmse_scores, columns=['Model', 'RMSE'])
@@ -235,29 +258,29 @@ df.to_excel(excel_file_path, index=False)
 
 print(f'RMSE scores saved to {excel_file_path}')
 
-from sklearn.ensemble import StackingRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+
+
 
 # Define a function to get the base models
 def get_base_models():
     base_models = dict()
-    base_models['cart'] = DecisionTreeRegressor(max_depth=5)
+    #base_models['cart'] = DecisionTreeRegressor(max_depth=5)
     base_models['ols'] = LinearRegression()
-    base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
+    #base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
     base_models['gboost'] = GradientBoostingRegressor()
     base_models['XGBoost'] = XGBRegressor()
     base_models['LGBoost'] = LGBMRegressor()
     base_models['ridge'] = Ridge(alpha=1.0)
     base_models['Lasso'] = Lasso(alpha=0.0005)
+    base_models[ 'svr' ] = SVR (kernel='linear')  # You can change the kernel type as needed
     return base_models
 
 # Get the base models
 base_models = get_base_models()
 
 # Split your data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X_values, Y_values, test_size=0.1, shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.12,shuffle=False)
+#X_train, X_test, y_train, y_test = train_test_split(X_values, Y_values, test_size=0.1, shuffle=False)
 
 # Create a list of base models and their names
 base_model_list = list(base_models.values())
@@ -270,27 +293,78 @@ stacking_regressor = StackingRegressor(
 )
 
 # Fit the stacking ensemble model
-stacking_regressor.fit(X_train, y_train)
+stacking_regressor.fit(X_reduced_train, y_train)
 
 # Predict with the stacking model
-y_pred_stacking = stacking_regressor.predict(X_test)
+y_pred_stacking = stacking_regressor.predict(X_reduced_test)
 
 # Calculate RMSE for stacking model
 rmse_stacking = np.sqrt(mean_squared_error(y_test, y_pred_stacking))
 
 # Print the RMSE for the stacking model
 print(f"Stacking RMSE: {rmse_stacking}")
-In this modified code:
-
-We define a get_base_models function to obtain the base models, which is similar to your original code.
-We split your data into training and testing sets using train_test_split.
-We create a list of base models (base_model_list) and their names (base_model_names).
-We create the stacking ensemble model using StackingRegressor, specifying the base models as estimators and the meta-model (in this case, a Linear Regression model) as final_estimator.
-We fit the stacking ensemble model on the training data and make predictions on the testing data.
-We calculate and print the RMSE for the stacking model.
-This code uses the base models you defined in your original code as the base models for stacking.
 
 
+# Define your get_base_models function as before
+def get_base_models():
+    base_models = dict()
+    #base_models['cart'] = DecisionTreeRegressor(max_depth=5)
+    base_models['ols'] = LinearRegression()
+    #base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
+    base_models['gboost'] = GradientBoostingRegressor()
+    base_models['XGBoost'] = XGBRegressor()
+    base_models['LGBoost'] = LGBMRegressor()
+    base_models['ridge'] = Ridge(alpha=1.0)
+    base_models['Lasso'] = Lasso(alpha=0.0005)
+    base_models[ 'svr' ] = SVR (kernel='linear')  # You can change the kernel type as needed
+    return base_models
+
+# Get the base models
+base_models = get_base_models()
 
 
+# Initialize variables for forecast combination
+combined_forecasts = []  # To store combined forecasts
+weights = []  # To store weights for each model
+
+# Set the number of splits for time series cross-validation
+n_splits = 5  # You can adjust this based on your data and requirements
+
+# Perform time series cross-validation
+tscv = TimeSeriesSplit(n_splits=n_splits)
+for train_index, val_index in tscv.split(X_reduced):
+    X_train, X_val = X_reduced[train_index], X_reduced[val_index]
+    y_train, y_val = Y_values[train_index], Y_values[val_index]
+
+    # Train and predict with base models
+    base_model_forecasts = []
+    for model in base_models:
+        model.fit(X_train, y_train)
+        base_model_pred = model.predict(X_val)
+        base_model_forecasts.append(base_model_pred)
+
+    # Calculate MSE for each model's forecast
+    mse_scores = [mean_squared_error(y_val, forecast) for forecast in base_model_forecasts]
+
+    # Calculate weights based on inverse MSE (lower MSE gets higher weight)
+    mse_inv = [1 / mse if mse != 0 else 1 for mse in mse_scores]
+    total_inv = sum(mse_inv)
+    model_weights = [inv / total_inv for inv in mse_inv]
+
+    # Store the weights
+    weights.append(model_weights)
+
+    # Combine forecasts using weighted averaging
+    combined_forecast = np.average(base_model_forecasts, weights=model_weights, axis=0)
+    combined_forecasts.append(combined_forecast)
+
+# Calculate the final combined forecast weights based on the average weights across folds
+average_weights = np.mean(weights, axis=0)
+
+# Combine forecasts from all folds for testing using the final weights
+final_combined_forecast = np.average(combined_forecasts, weights=average_weights, axis=0)
+
+# Evaluate the combined forecast's performance (e.g., MSE)
+test_mse = mean_squared_error(Y_values[-len(final_combined_forecast):], final_combined_forecast)
+print("Combined Forecast MSE:", test_mse)
 
