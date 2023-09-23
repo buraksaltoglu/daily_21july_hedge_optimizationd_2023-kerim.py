@@ -71,15 +71,15 @@ for key_name in file_dictionary.keys():
     print(key_name)
 
 # Example
-monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
+#monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
 
-monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
+#monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
 
-monthly_dataset_macro_92_filtered = file_dictionary['monthly_dataset_macro_sentiment_92_filtered']
+#monthly_dataset_macro_92_filtered = file_dictionary['monthly_dataset_macro_sentiment_92_filtered']
 
-monthly_dataset_macro_92_filtered.set_index('date', inplace=True)
+#monthly_dataset_macro_92_filtered.set_index('date', inplace=True)
 
-monthly_dataset_macro_92_filtered = file_dictionary['monthly_full_dataset_sd92_filtered']
+monthly_full_dataset_sd92_filtered = file_dictionary['monthly_full_dataset_sd92_filtered']
 
 monthly_full_dataset_sd92_filtered.set_index('date', inplace=True)
 
@@ -100,15 +100,15 @@ monthly_full_dataset_sd92_filtered.set_index('date', inplace=True)
 # data_mixed.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
 # data_finance_rp.drop(['1.03.2020','1.05.2020','1.04.2020','1.06.2020'],inplace=True)
 #######################################################################################
-monthly_dataset_macro_92_filtered.drop(['2020-03-01','2020-04-01','2020-06-01','2020-05-01'], inplace=True)
+monthly_full_dataset_sd92_filtered.drop(['2020-03-01','2020-04-01','2020-06-01','2020-05-01'], inplace=True)
 #X_values = monthly_dataset_sentiment_92_filtered.shift(1).dropna()
 #Y_values = monthly_dataset_sentiment_92_filtered['RV90']
 
-X_values = monthly_dataset_macro_92_filtered.shift(1).dropna()
-Y_values = monthly_dataset_macro_92_filtered['RV90']
+X_values = monthly_full_dataset_sd92_filtered.shift(1).dropna()
+Y_values = monthly_full_dataset_sd92_filtered['RV60']
 Y_values = Y_values.drop(Y_values.index[0])
 
-print(X_values)
+
 
 
 #X_values=monthly_dataset_macro_sentiment_92_filtered.shift(1).dropna()
@@ -123,8 +123,6 @@ print(X_values)
 
 #  Sentiments Regression #########################
 
-
-#  Sentiments Regression #########################
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X_values)
 
@@ -133,15 +131,22 @@ pca = PCA()
 X_reduced = pca.fit_transform(X_scaled)
 
 
-regr = LinearRegression()
+
+
+
+# what is the % of explained variance by 1 2 3 ..factors
+print('variance explained by factors')
+PCA_dim=40
+
+
 mse = []
 
 
 
-#print(np.shape(X_reduced))
+
 # what is the % of explained variance by 1 2 3 ..factors
 print('variance explained by factors')
-PCA_dim=70
+
 print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals = 4)*100)[0:PCA_dim])
 
 cumulative_variance_ratio = np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4) * 100)
@@ -161,10 +166,13 @@ plt.xticks(range(1, PCA_dim + 1), range(1, PCA_dim + 1))  # Show only integer va
 plt.grid(True)
 plt.show()
 
+PCA_dim=50
 print(f"Dimension where 90% variance is explained: {explained_variance_90_percent}")
 # here we choose the 1st part i.e. 90% for training and 10% for testing,if we want random sample write random
 
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.08,shuffle=False)
+
+
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:PCA_dim],Y_values,test_size=0.2,shuffle=False)
 
 #scale the training and testing data
 
@@ -191,14 +199,15 @@ def get_regresors():
 regresors=get_regresors()
 
 
+print(np.shape(X_reduced_train))
 
-####################### Sentiment only RV30 ##############################################################
-#X_train, X_test, y_train, y_test = train_test_split(X_values,Y_values,test_size=0.1,shuffle=False)
 rmse_values = []
 results, names = list ( ), list ( )
-
+b_plot = pd.DataFrame()
 rmse_scores = []
+mse_cv_mean_scores= []
 
+scores_cv=pd.DataFrame(columns=['regressor','mse'])
 for name, regresor in regresors.items():
     model = regresor
     model.fit(X_reduced_train, y_train)
@@ -206,31 +215,52 @@ for name, regresor in regresors.items():
     rmse = np.sqrt(mean_squared_error(y_test.values, y_pred))
     rmse_scores.append((name, rmse))
 
+    r2 = cross_val_score (model, X_reduced_train, y_train, cv=10, scoring='r2')
+    cvmse = cross_val_score (model, X_reduced_train, y_train, cv=10, scoring='neg_mean_squared_error')
+    scores_cv = scores_cv.append ({'regressor': name, 'cvmse': np.sqrt(-cvmse.mean ( ))}, ignore_index=True)
+
+
+    # Plot RMSE for each regressor
+
+
+    #y_test_df = pd.DataFrame(y_test).reset_index()
+    #y_pred_df = pd.DataFrame({'Pred': y_pred})
+    #y_pred_df['date'] = y_test_df['date']
+    #y_all = y_test_df.merge(y_pred_df, on='date')
+
+    scores_cv = pd.DataFrame (scores_cv)
 
 
 
 
 
-    y_test_df = pd.DataFrame(y_test).reset_index()
-    y_pred_df = pd.DataFrame({'Pred': y_pred})
-    y_pred_df['date'] = y_test_df['date']
 
-    y_all = y_test_df.merge(y_pred_df, on='date')
-    
+    # we plot fitted and predicted
+
     plt.figure (figsize=(10, 4))
     plt.plot (y_test.values, label='Actual', color='red')
     plt.plot (y_pred, label='pred', color='blue')
-
     plt.xlabel ('Time')
     plt.ylabel ('Value')
     plt.title (f'Time Series Plot for Model: {name}')
     plt.grid (True)
     plt.xticks (rotation=45)
     plt.legend ( )
-    plt.show ( )
+    #plt.show ( )
+
+
+
+
+    b_plot = b_plot.append ({'regressor': name,  'mse': mse}, ignore_index=True)
+
+print(scores_cv)
+print(rmse_scores)
 # Extract model names and RMSE scores
 model_names, rmse_values = zip(*rmse_scores)
 
+print("CV ---mean")
+
+#model mse_cv_mean_scores=zip(*rmse_scores)
 # Define colors for bars
 colors = ['skyblue', 'lightgreen', 'lightcoral', 'lightsalmon','blue']
 
@@ -247,14 +277,15 @@ for bar, rmse_val in zip(bars, rmse_values):
 
 plt.xticks(rotation=45)
 plt.tight_layout()
-#plt.show()
+plt.show()
 
-print(rmse_scores)
+
 df = pd.DataFrame(rmse_scores, columns=['Model', 'RMSE'])
 
 # Save the DataFrame to an Excel file
-excel_file_path = 'rmse_scores.xlsx'
+excel_file_path = 'scores_cv.xlsx'
 df.to_excel(excel_file_path, index=False)
+
 
 print(f'RMSE scores saved to {excel_file_path}')
 
@@ -264,9 +295,9 @@ print(f'RMSE scores saved to {excel_file_path}')
 # Define a function to get the base models
 def get_base_models():
     base_models = dict()
-    #base_models['cart'] = DecisionTreeRegressor(max_depth=5)
-    base_models['ols'] = LinearRegression()
-    #base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
+    base_models['cart'] = DecisionTreeRegressor(max_depth=5)
+    #base_models['ols'] = LinearRegression()
+    base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
     base_models['gboost'] = GradientBoostingRegressor()
     base_models['XGBoost'] = XGBRegressor()
     base_models['LGBoost'] = LGBMRegressor()
@@ -279,7 +310,7 @@ def get_base_models():
 base_models = get_base_models()
 
 # Split your data into training and testing sets
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.12,shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.08,shuffle=False)
 #X_train, X_test, y_train, y_test = train_test_split(X_values, Y_values, test_size=0.1, shuffle=False)
 
 # Create a list of base models and their names
@@ -305,66 +336,5 @@ rmse_stacking = np.sqrt(mean_squared_error(y_test, y_pred_stacking))
 print(f"Stacking RMSE: {rmse_stacking}")
 
 
-# Define your get_base_models function as before
-def get_base_models():
-    base_models = dict()
-    #base_models['cart'] = DecisionTreeRegressor(max_depth=5)
-    base_models['ols'] = LinearRegression()
-    #base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
-    base_models['gboost'] = GradientBoostingRegressor()
-    base_models['XGBoost'] = XGBRegressor()
-    base_models['LGBoost'] = LGBMRegressor()
-    base_models['ridge'] = Ridge(alpha=1.0)
-    base_models['Lasso'] = Lasso(alpha=0.0005)
-    base_models[ 'svr' ] = SVR (kernel='linear')  # You can change the kernel type as needed
-    return base_models
-
-# Get the base models
-base_models = get_base_models()
-
-
-# Initialize variables for forecast combination
-combined_forecasts = []  # To store combined forecasts
-weights = []  # To store weights for each model
-
-# Set the number of splits for time series cross-validation
-n_splits = 5  # You can adjust this based on your data and requirements
-
-# Perform time series cross-validation
-tscv = TimeSeriesSplit(n_splits=n_splits)
-for train_index, val_index in tscv.split(X_reduced):
-    X_train, X_val = X_reduced[train_index], X_reduced[val_index]
-    y_train, y_val = Y_values[train_index], Y_values[val_index]
-
-    # Train and predict with base models
-    base_model_forecasts = []
-    for model in base_models:
-        model.fit(X_train, y_train)
-        base_model_pred = model.predict(X_val)
-        base_model_forecasts.append(base_model_pred)
-
-    # Calculate MSE for each model's forecast
-    mse_scores = [mean_squared_error(y_val, forecast) for forecast in base_model_forecasts]
-
-    # Calculate weights based on inverse MSE (lower MSE gets higher weight)
-    mse_inv = [1 / mse if mse != 0 else 1 for mse in mse_scores]
-    total_inv = sum(mse_inv)
-    model_weights = [inv / total_inv for inv in mse_inv]
-
-    # Store the weights
-    weights.append(model_weights)
-
-    # Combine forecasts using weighted averaging
-    combined_forecast = np.average(base_model_forecasts, weights=model_weights, axis=0)
-    combined_forecasts.append(combined_forecast)
-
-# Calculate the final combined forecast weights based on the average weights across folds
-average_weights = np.mean(weights, axis=0)
-
-# Combine forecasts from all folds for testing using the final weights
-final_combined_forecast = np.average(combined_forecasts, weights=average_weights, axis=0)
-
-# Evaluate the combined forecast's performance (e.g., MSE)
-test_mse = mean_squared_error(Y_values[-len(final_combined_forecast):], final_combined_forecast)
-print("Combined Forecast MSE:", test_mse)
+scores_cv_df = pd.DataFrame(scores_cv)
 

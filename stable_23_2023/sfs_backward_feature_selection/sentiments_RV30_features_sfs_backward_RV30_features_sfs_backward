@@ -1,7 +1,7 @@
-DecisionTreeRegressor(max_depth=5),['RV60'],['AAAFFM'],['IPBUSEQ'],['BUSLOANS'],['EXCAUS']
+DecisionTreeRegressor(max_depth=5),['RV60'],['FinancialUncertaintyH1'],['GPR'],['MichiganConsumer'],['USGOOD']
 LinearRegression(),['RV60'],['CUSR0000SAD'],['CUSR0000SAS'],['CES0600000008'],['CES2000000008']
 "RandomForestRegressor(max_depth=2, random_state=1)",['RV60'],['UEMP15T26'],['W875RX1'],['IPNCONGD'],['CPIMEDSL']
-GradientBoostingRegressor(),['RV30'],['RV60'],['BOGMBASE'],['EXSZUS'],['EXJPUS']
+GradientBoostingRegressor(),['RV60'],['AAAFFM'],['CMRMTSPL'],['IPBUSEQ'],['EXUSUK']
 "XGBRegressor(base_score=None, booster=None, callbacks=None,
              colsample_bylevel=None, colsample_bynode=None,
              colsample_bytree=None, early_stopping_rounds=None,
