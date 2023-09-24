@@ -26,6 +26,10 @@ sns.set_style('white')
 
 warnings.filterwarnings('ignore')
 
+directory = "new_data"
+
+file_dictionary = {}
+
 
 # to make the time series consistent we take RV(t) and X(t-1): (RV(t-1), other features
 # We delete the first row of RV(t) and shift the X by 1.
@@ -40,28 +44,22 @@ warnings.filterwarnings('ignore')
 # print(dfX)
 # now we see that dfX is RV(2),RV(3) RV(4) Df RV(1) RV(2) RV(3)
 
-# getting the data ####################################################
-data_finance_rp = pd.read_csv(r"data\finance_9_1_2023.csv", encoding='utf-8', sep=';')  # we delete co1,co3
-data_finance = pd.read_csv(r"data\finance_6_2_2023.csv", encoding='utf-8', sep=',')  # we delete
-#data_macro = pd.read_csv(r"data\data_macro_only_1_6_2023.csv", encoding='utf-8', sep=',')
-data_macro = pd.read_csv(r"data\data_macro_only_13_1_2023.csv", encoding='utf-8', sep=';')
-sentiments = pd.read_csv(r"data/sentiments.csv", encoding='utf-8', sep=',')
-data_mixed = pd.read_csv(r"data\data_mixed.csv", encoding='utf-8', sep=',')
+monthly_dataset_sentiment_92_filtered = file_dictionary['MONTHLY_FULL_DATASET_SD92_FILTERED']
+monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
+sentiments = pd.read_excel(r'new_data/MONTHLY_FULL_DATASET_SD92_FILTERED.xlsx')
+
 ##############################################################################################################
 
 # create the data index ###################################################
-data_finance.set_index("date", inplace=True)
-data_finance_rp.set_index('date', inplace=True)
-data_macro.set_index('date', inplace=True)
+
 sentiments.set_index('date', inplace=True)
-data_mixed.set_index('date', inplace=True)
+
 
 # drop covid data ###############################
 
-data_finance.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
-data_macro.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
+
 sentiments.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
-data_mixed.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
+
 # data_finance_rp.drop(['1.03.2020','1.05.2020','1.04.2020','1.06.2020'],inplace=True)
 #######################################################################################
 
@@ -413,8 +411,8 @@ feature_set_selector(data_set=sentiments, target="RV90", regressors_for_data_set
 """
 
 # Example usage for update_data_set is below:
-update_data_set(data_set=sentiments, target="RV60", regressors_for_data_set=regressors, n_features_to_select=5,
-                directory_name="new_data", file_name="MONTHLY_FULL_DATASET_SD92_FILTERED", threshold=7)
+#update_data_set(data_set=sentiments, target="RV60", regressors_for_data_set=regressors, n_features_to_select=5,
+               # directory_name="new_data", file_name="MONTHLY_FULL_DATASET_SD92_FILTERED", threshold=7)
 
 # update_data_set(data_set=data_macro, target="RV30", regressors_for_data_set=regressors, n_features_to_select=15,
                 # directory_name="updated_data_sets", file_name="updated_macro_feature_set_30", threshold=30)
