@@ -46,108 +46,33 @@ warnings.filterwarnings('ignore')
 # print(dfX)
 # now we see that dfX is RV(2),RV(3) RV(4) Df RV(1) RV(2) RV(3)
 
-# getting the data ####################################################
-# data_finance_rp = pd.read_csv(r"data\finance_9_1_2023.csv", encoding='utf-8', sep=';')  # we delete co1,co3
-# data_finance = pd.read_csv(r"data\finance_6_2_2023.csv", encoding='utf-8', sep=',')  # we delete
-# #data_macro = pd.read_csv(r"data\data_macro_only_1_6_2023.csv", encoding='utf-8', sep=',')
-# data_macro = pd.read_csv(r"data\data_macro_only_13_1_2023.csv", encoding='utf-8', sep=';')
-# sentiments = pd.read_csv(r"data/sentiments.csv", encoding='utf-8', sep=',')
+
 # data_mixed = pd.read_csv(r"data\data_mixed.csv", encoding='utf-8', sep=',')
+data=pd.read_csv(r"new_data\dataf.csv", encoding='utf-8', sep=',')
+data.set_index('date',inplace=True)
+#print(data.head())
+data.drop(['2020-01-01','2020-04-01','2020-06-01','2020-05-01'], inplace=True)
 
-# Specify the directory where the files are located
-directory = "new_data"
-
-file_dictionary = {}
-
-# Process each file in the directory
-for file in os.listdir(directory):
-    if file.endswith(".xlsx"):
-        file_name = file.lower().replace('.xlsx','')
-        file_path = os.path.join(directory, file)
-        data = pd.read_excel(file_path)
-        file_dictionary[file_name] = data
-
-for key_name in file_dictionary.keys():
-    print(key_name)
-
-# Example
-#monthly_dataset_sentiment_92_filtered = file_dictionary['monthly_dataset_sentiment_92_filtered']
-
-#monthly_dataset_sentiment_92_filtered.set_index('date', inplace=True)
-
-#monthly_dataset_macro_92_filtered = file_dictionary['monthly_dataset_macro_sentiment_92_filtered']
-
-#monthly_dataset_macro_92_filtered.set_index('date', inplace=True)
-
-monthly_full_dataset_sd92_filtered = file_dictionary['monthly_full_dataset_sd92_filtered']
-
-monthly_full_dataset_sd92_filtered.set_index('date', inplace=True)
-
-##############################################################################################################
-
-# create the data index ###################################################
-# data_finance.set_index("date", inplace=True)
-# data_finance_rp.set_index('date', inplace=True)
-# data_macro.set_index('date', inplace=True)
-# sentiments.set_index('date', inplace=True)
-# data_mixed.set_index('date', inplace=True)
-
-# drop covid data ###############################
-
-# data_finance.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
-# data_macro.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
-# sentiments.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
-# data_mixed.drop(['1.03.2020', '1.05.2020', '1.04.2020', '1.06.2020'], inplace=True)
-# data_finance_rp.drop(['1.03.2020','1.05.2020','1.04.2020','1.06.2020'],inplace=True)
-#######################################################################################
-monthly_full_dataset_sd92_filtered.drop(['2020-03-01','2020-04-01','2020-06-01','2020-05-01'], inplace=True)
-#X_values = monthly_dataset_sentiment_92_filtered.shift(1).dropna()
-#Y_values = monthly_dataset_sentiment_92_filtered['RV90']
-
-X_values = monthly_full_dataset_sd92_filtered.shift(1).dropna()
-Y_values = monthly_full_dataset_sd92_filtered['RV60']
+X_values = data.shift(1).dropna()
+Y_values = data['RV60']
 Y_values = Y_values.drop(Y_values.index[0])
 
-
-
-
-#X_values=monthly_dataset_macro_sentiment_92_filtered.shift(1).dropna()
-
-#Y_values = monthly_dataset_macro_sentiment_92_filtered['RV30']
-#Y_values = Y_values.drop(Y_values.index[0])
-# X_n=X.drop(['RV30'],axis=1)
-
-
-# data_finance.drop(['logret, CO1'],axis=1,inplace=True)
-# data_finance_rp=data_finance.drop(['logret','CO1','CO3','CO6','brent'], axis=1,inplace=True)
-
-#  Sentiments Regression #########################
+# Perform PCA on the scaled data
 
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X_values)
 
-# Perform PCA on the scaled data
 pca = PCA()
 X_reduced = pca.fit_transform(X_scaled)
 
-
-
-
-
 # what is the % of explained variance by 1 2 3 ..factors
-print('variance explained by factors')
-PCA_dim=40
 
 
 mse = []
 
-
-
-
 # what is the % of explained variance by 1 2 3 ..factors
 print('variance explained by factors')
 
-print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals = 4)*100)[0:PCA_dim])
 
 cumulative_variance_ratio = np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4) * 100)
 index_90_percent = np.argmax(cumulative_variance_ratio >= 90)
@@ -162,17 +87,19 @@ plt.plot(index_90_percent + 1, 90, 'ro')  # Red dot at 90% explained variance
 plt.title('Cumulative Explained Variance vs. Number of Principal Components')
 plt.xlabel('Number of Principal Components')
 plt.ylabel('Cumulative Explained Variance (%)')
-plt.xticks(range(1, PCA_dim + 1), range(1, PCA_dim + 1))  # Show only integer values on the x-axis
+plt.xticks(range(5, PCA_dim + 1, 5))
+#plt.xticks(range(1, PCA_dim + 1), range(1, PCA_dim + 1))  # Show only integer values on the x-axis
 plt.grid(True)
 plt.show()
 
-PCA_dim=50
+
+
 print(f"Dimension where 90% variance is explained: {explained_variance_90_percent}")
 # here we choose the 1st part i.e. 90% for training and 10% for testing,if we want random sample write random
 
+PCA_factor=index_90_percent
 
-
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:PCA_dim],Y_values,test_size=0.2,shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:PCA_factor],Y_values,test_size=0.2,shuffle=False)
 
 #scale the training and testing data
 
@@ -198,6 +125,7 @@ def get_regresors():
 
 regresors=get_regresors()
 
+print('----dimension-----')
 
 print(np.shape(X_reduced_train))
 
@@ -230,24 +158,18 @@ for name, regresor in regresors.items():
 
     scores_cv = pd.DataFrame (scores_cv)
 
-
-
-
-
-
     # we plot fitted and predicted
 
-    plt.figure (figsize=(10, 4))
-    plt.plot (y_test.values, label='Actual', color='red')
-    plt.plot (y_pred, label='pred', color='blue')
-    plt.xlabel ('Time')
-    plt.ylabel ('Value')
-    plt.title (f'Time Series Plot for Model: {name}')
-    plt.grid (True)
-    plt.xticks (rotation=45)
-    plt.legend ( )
+    #plt.figure (figsize=(10, 4))
+    #plt.plot (y_test.values, label='Actual', color='red')
+    #plt.plot (y_pred, label='pred', color='blue')
+    #plt.xlabel ('Time')
+    #plt.ylabel ('Value')
+    #plt.title (f'Time Series Plot for Model: {name}')
+   # plt.grid (True)
+    #plt.xticks (rotation=45)
+    #plt.legend ( )
     #plt.show ( )
-
 
 
 
@@ -272,8 +194,8 @@ plt.ylabel('RMSE')
 plt.title('RMSE for Different Regression Models')
 
 # Add RMSE values as text on each bar
-for bar, rmse_val in zip(bars, rmse_values):
-    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01, f'{rmse_val:.2f}', ha='center', fontsize=10)
+#for bar, rmse_val in zip(bars, rmse_values):
+    #plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01, f'{rmse_val:.2f}', ha='center', fontsize=10)
 
 plt.xticks(rotation=45)
 plt.tight_layout()
@@ -290,7 +212,8 @@ df.to_excel(excel_file_path, index=False)
 print(f'RMSE scores saved to {excel_file_path}')
 
 
-
+# This part if for stacking
+################################################################
 
 # Define a function to get the base models
 def get_base_models():
@@ -310,9 +233,9 @@ def get_base_models():
 base_models = get_base_models()
 
 # Split your data into training and testing sets
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced,Y_values,test_size=0.08,shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:5],Y_values,test_size=0.08,shuffle=False)
 #X_train, X_test, y_train, y_test = train_test_split(X_values, Y_values, test_size=0.1, shuffle=False)
-
+print(np.shape(X_reduced_train))
 # Create a list of base models and their names
 base_model_list = list(base_models.values())
 base_model_names = list(base_models.keys())
@@ -338,3 +261,38 @@ print(f"Stacking RMSE: {rmse_stacking}")
 
 scores_cv_df = pd.DataFrame(scores_cv)
 
+# Initialize empty DataFrames
+scores = pd.DataFrame(columns=['regresor', 'r2', 'mse'])
+b_plot = pd.DataFrame(columns=['regresor', 'r2', 'mse'])
+
+# Lists to store data for boxplot
+names_list = []
+mse_mean_list = []
+mse_standard_deviation_list = []
+
+# List to store data for later plotting
+mses_and_corresponding_models = []
+
+for name, regresor in regresors.items():
+    model = regresor
+    model.fit(X_reduced_train, y_train)
+    r2 = cross_val_score(model, X_reduced_train, y_train, cv=10, scoring='r2')
+    mse = cross_val_score(model, X_reduced_train, y_train, cv=10, scoring='neg_mean_squared_error')
+
+    scores = scores.append({'regresor': name, 'r2': r2.mean(), 'mse': -mse.mean()}, ignore_index=True)
+    b_plot = b_plot.append({'regresor': name, 'r2': r2, 'mse': -mse}, ignore_index=True)
+
+    names_list.append(name)
+    mse_mean_list.append(mse.mean())
+    mse_standard_deviation_list.append(mse.std())
+
+    # Append data for plotting
+    mses_and_corresponding_models.append({'name': name, 'mse_mean': mse.mean()})
+
+# Create a boxplot using the original mse data (no square root)
+boxprops = dict(color='blue', facecolor='lightblue')  # Customize box color
+plt.figure(figsize=(8, 6))
+plt.boxplot(b_plot['mse'], labels=names_list, showmeans=True, notch=True, patch_artist=True, boxprops=boxprops)
+
+# Show the plot
+plt.show()
