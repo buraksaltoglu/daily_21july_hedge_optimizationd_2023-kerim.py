@@ -32,7 +32,6 @@ sns.set_style('white')
 
 warnings.filterwarnings('ignore')
 
-
 # to make the time series consistent we take RV(t) and X(t-1): (RV(t-1), other features
 # We delete the first row of RV(t) and shift the X by 1.
 # I show with an example
@@ -45,8 +44,6 @@ warnings.filterwarnings('ignore')
 # print('dfX')
 # print(dfX)
 # now we see that dfX is RV(2),RV(3) RV(4) Df RV(1) RV(2) RV(3)
-
-
 # data_mixed = pd.read_csv(r"data\data_mixed.csv", encoding='utf-8', sep=',')
 data=pd.read_csv(r"new_data\dataf.csv", encoding='utf-8', sep=',')
 data.set_index('date',inplace=True)
@@ -61,14 +58,13 @@ Y_values = Y_values.drop(Y_values.index[0])
 
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X_values)
-
 pca = PCA()
 X_reduced = pca.fit_transform(X_scaled)
 
 # what is the % of explained variance by 1 2 3 ..factors
 
 
-mse = []
+#mse = []
 
 # what is the % of explained variance by 1 2 3 ..factors
 print('variance explained by factors')
@@ -98,8 +94,9 @@ print(f"Dimension where 90% variance is explained: {explained_variance_90_percen
 # here we choose the 1st part i.e. 90% for training and 10% for testing,if we want random sample write random
 
 PCA_factor=index_90_percent
+PCA_factor=index_90_percent
 
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:PCA_factor],Y_values,test_size=0.2,shuffle=False)
+X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:PCA_factor],Y_values,test_size=0.1,shuffle=False)
 
 #scale the training and testing data
 
@@ -125,7 +122,7 @@ def get_regresors():
 
 regresors=get_regresors()
 
-print('----dimension-----')
+print('----dimension PCA -----')
 
 print(np.shape(X_reduced_train))
 
@@ -208,91 +205,123 @@ df = pd.DataFrame(rmse_scores, columns=['Model', 'RMSE'])
 excel_file_path = 'scores_cv.xlsx'
 df.to_excel(excel_file_path, index=False)
 
-
-print(f'RMSE scores saved to {excel_file_path}')
-
-
-# This part if for stacking
+    print(f'RMSE scores saved to {excel_file_path}')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
 ################################################################
-
-# Define a function to get the base models
-def get_base_models():
-    base_models = dict()
-    base_models['cart'] = DecisionTreeRegressor(max_depth=5)
-    #base_models['ols'] = LinearRegression()
-    base_models['rforest'] = RandomForestRegressor(max_depth=2, random_state=1)
-    base_models['gboost'] = GradientBoostingRegressor()
-    base_models['XGBoost'] = XGBRegressor()
-    base_models['LGBoost'] = LGBMRegressor()
-    base_models['ridge'] = Ridge(alpha=1.0)
-    base_models['Lasso'] = Lasso(alpha=0.0005)
-    base_models[ 'svr' ] = SVR (kernel='linear')  # You can change the kernel type as needed
-    return base_models
-
-# Get the base models
-base_models = get_base_models()
-
-# Split your data into training and testing sets
-X_reduced_train,X_reduced_test,y_train,y_test = train_test_split(X_reduced[:,0:5],Y_values,test_size=0.08,shuffle=False)
-#X_train, X_test, y_train, y_test = train_test_split(X_values, Y_values, test_size=0.1, shuffle=False)
-print(np.shape(X_reduced_train))
-# Create a list of base models and their names
-base_model_list = list(base_models.values())
-base_model_names = list(base_models.keys())
-
-# Create the stacking ensemble model
-stacking_regressor = StackingRegressor(
-    estimators=[('base_' + name, model) for name, model in zip(base_model_names, base_model_list)],
-    final_estimator=LinearRegression()  # You can choose a different meta-model if needed
-)
-
-# Fit the stacking ensemble model
-stacking_regressor.fit(X_reduced_train, y_train)
-
-# Predict with the stacking model
-y_pred_stacking = stacking_regressor.predict(X_reduced_test)
-
-# Calculate RMSE for stacking model
-rmse_stacking = np.sqrt(mean_squared_error(y_test, y_pred_stacking))
-
-# Print the RMSE for the stacking model
-print(f"Stacking RMSE: {rmse_stacking}")
-
-
-scores_cv_df = pd.DataFrame(scores_cv)
-
 # Initialize empty DataFrames
-scores = pd.DataFrame(columns=['regresor', 'r2', 'mse'])
-b_plot = pd.DataFrame(columns=['regresor', 'r2', 'mse'])
+scores = pd.DataFrame(columns=['regresor', 'rmse'])
+b_plot = pd.DataFrame(columns=['regresor', 'rmse'])
+validation=pd.DataFrame(columns=['regresor', 'rmse_valid'])
+
+
 
 # Lists to store data for boxplot
 names_list = []
-mse_mean_list = []
-mse_standard_deviation_list = []
-
+rmse_mean_list = []
+rmse_standard_deviation_list = []
+RMSE_cv= []
 # List to store data for later plotting
 mses_and_corresponding_models = []
 
 for name, regresor in regresors.items():
     model = regresor
     model.fit(X_reduced_train, y_train)
-    r2 = cross_val_score(model, X_reduced_train, y_train, cv=10, scoring='r2')
-    mse = cross_val_score(model, X_reduced_train, y_train, cv=10, scoring='neg_mean_squared_error')
+    y_pred = model.predict (X_reduced_test)
+    rmse = np.sqrt (mean_squared_error (y_test.values, y_pred))
+    r2 = cross_val_score(model, X_reduced_train, y_train, cv=5, scoring='r2')
+    mse = cross_val_score(model, X_reduced_train, y_train, cv=5, scoring='neg_mean_squared_error')
+    scores = scores.append ( {'regresor': name, 'rmse_stdev': np.std(np.sqrt(-mse)), 'rmse': np.sqrt(-mse.mean())},ignore_index=True)
+    b_plot = b_plot.append({'regresor': name, 'rmse_st.dev': np.sqrt(np.var(-mse)), 'rmse': np.sqrt(-mse)}, ignore_index=True)
+    validation = validation.append ({'regresor': name, 'rmse_valid':rmse},ignore_index=True)
 
-    scores = scores.append({'regresor': name, 'r2': r2.mean(), 'mse': -mse.mean()}, ignore_index=True)
-    b_plot = b_plot.append({'regresor': name, 'r2': r2, 'mse': -mse}, ignore_index=True)
+    #plt.figure (figsize=(10, 4))
+    plt.plot (y_test.values, label='Actual', color='red')
+    plt.plot (y_pred, label='pred', color='blue')
+    plt.xlabel ('Time')
+    plt.ylabel ('Value')
+    plt.title (f'Time Series Plot for Model: {name}')
+    plt.grid (True)
+    plt.xticks (rotation=45)
+    plt.legend ( )
+    #plt.show( )
+print('scores')
+print(scores)
 
-    names_list.append(name)
-    mse_mean_list.append(mse.mean())
-    mse_standard_deviation_list.append(mse.std())
 
-    # Append data for plotting
-    mses_and_corresponding_models.append({'name': name, 'mse_mean': mse.mean()})
+validation = pd.DataFrame(validation)
 
-# Create a boxplot using the original mse data (no square root)
-boxprops = dict(color='blue', facecolor='lightblue')  # Customize box color
-plt.figure(figsize=(8, 6))
-plt.boxplot(b_plot['mse'], labels=names_list, showmeans=True, notch=True, patch_artist=True, boxprops=boxprops)
+# Define the subdirectory path
+subdirectory_path = 'cv_mse'
+
+# Create the subdirectory if it doesn't exist
+if not os.path.exists(subdirectory_path):
+    os.makedirs(subdirectory_path)
+
+# Define file names for scores and validation
+scores_file_name = 'scores.xlsx'
+validation_file_name = 'validation.xlsx'
+
+# Write the DataFrames to separate Excel files inside the subdirectory
+scores_file_path = os.path.join(subdirectory_path, scores_file_name)
+validation_file_path = os.path.join(subdirectory_path, validation_file_name)
+
+scores.to_excel(scores_file_path, index=False)
+validation.to_excel(validation_file_path, index=False)
+
+
+
+
+validation_rmse=validation['rmse_valid']
+regresors = scores['regresor']
+rmse = scores['rmse']
+rmse_stdev = scores['rmse_stdev']
+
+#rmse_validation=validation['rmse']
+colors = [ 'skyblue', 'lightgreen', 'lightcoral', 'lightsalmon', 'blue' ]
+plt.title('VALIDATION')
+#plt.figure(figsize=(10, 6))
+#plt.bar(regresors, validation_rmse, color=colors)
+#plt.show()
+
+#validation = pd.DataFrame(validation)
+plt.figure(figsize=(10, 6))
+plt.bar(validation['regresor'], validation['rmse_valid'], color='skyblue')
+plt.xlabel('Regressor')
+plt.ylabel('RMSE Valid')
+plt.title('Regressor vs. RMSE Valid')
+
+# Print RMSE values on the bars
+for i, value in enumerate(validation['rmse_valid']):
+    plt.text(i, value, f'{value:.2f}', ha='center', va='bottom', fontsize=10, color='black')
+
+# Rotate x-axis labels for better readability
+plt.xticks(rotation=45)
 
 # Show the plot
+plt.tight_layout()
+plt.show()
+
+# Create two subplots
+fig, axs = plt.subplots(2, 1, figsize=(10, 10))
+
+# Plot 1: Regressor vs. MSE
+axs[0].bar(regresors, rmse, color=colors)
+axs[0].set_ylabel('rmse')
+axs[0].set_title('Regressor vs. RMSE')
+
+# Plot 2: Regressor vs. MSE Std Dev
+axs[1].bar(regresors, rmse_stdev, color=colors)
+axs[1].set_ylabel('MSE Std Dev')
+axs[1].set_title('Regressor vs. MSE Std Dev')
+
+# Rotate x-axis labels for better readability
+for ax in axs:
+    ax.tick_params(axis='x', rotation=45)
+
+# Adjust the space between subplots
+plt.tight_layout()
+
+# Show the plots
 plt.show()
